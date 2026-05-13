@@ -1,13 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HomeSlider } from "@/components/home/HomeSlider";
+import { SpinWheel } from "@/components/wheel/SpinWheel";
 
 export const Route = createFileRoute("/_app/")({
-  head: () => ({
-    meta: [{ title: "ROBO SPEED CHALLENGE" }],
-  }),
-  component: Home,
+  head: () => ({ meta: [{ title: "ROBO SPEED CHALLENGE" }] }),
+  component: () => <SpinWheel />,
 });
-
-function Home() {
-  return <HomeSlider />;
-}

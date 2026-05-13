@@ -42,7 +42,7 @@ export function HakamlarPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="p-4 space-y-8 max-w-5xl mx-auto">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Hakamlar</h1>
