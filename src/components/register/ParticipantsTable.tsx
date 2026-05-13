@@ -74,7 +74,9 @@ export function ParticipantsTable() {
       <div className="px-6 py-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="font-semibold">Ro'yxatdan o'tganlar</h2>
-          <Badge variant="secondary" className="font-mono">{list.length}</Badge>
+          <Badge variant="secondary" className="font-mono">
+            {list.length}
+          </Badge>
         </div>
         <Button size="sm" onClick={() => navigate({ to: "/evaluate" })}>
           Baholashga o'tish
@@ -125,9 +127,7 @@ export function ParticipantsTable() {
                 <td className="p-3 text-muted-foreground font-mono text-xs">
                   {p.custom_number || "—"}
                 </td>
-                <td className="p-3 text-muted-foreground font-mono text-xs">
-                  {p.phone || "—"}
-                </td>
+                <td className="p-3 text-muted-foreground font-mono text-xs">{p.phone || "—"}</td>
                 <td className="p-3">{p.age}</td>
                 <td className="p-3">
                   <Badge variant="outline" className="text-xs font-medium">
@@ -154,7 +154,9 @@ export function ParticipantsTable() {
       {/* Pagination Controls */}
       <div className="px-6 py-5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-secondary/5">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ko'rsatish:</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Ko'rsatish:
+          </span>
           <select
             value={pageSize}
             onChange={(e) => handlePageSizeChange(Number(e.target.value))}
@@ -168,7 +170,10 @@ export function ParticipantsTable() {
 
         <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
           <span>
-            {list.length === 0 ? "—" : `${startIndex + 1}–${Math.min((currentPage + 1) * pageSize, list.length)}`} / {list.length}
+            {list.length === 0
+              ? "—"
+              : `${startIndex + 1}–${Math.min((currentPage + 1) * pageSize, list.length)}`}{" "}
+            / {list.length}
           </span>
         </div>
 

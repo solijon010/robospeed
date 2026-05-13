@@ -93,7 +93,9 @@
     color: var(--color-foreground);
     font-family: ui-sans-serif, system-ui, sans-serif;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     letter-spacing: -0.02em;
   }
 }
@@ -136,7 +138,7 @@
 }
 
 .custom-scrollbar:hover {
-  scrollbar-color: oklch(0.78 0.18 220 / 0.6) oklch(0.20 0.03 260 / 0.4);
+  scrollbar-color: oklch(0.78 0.18 220 / 0.6) oklch(0.2 0.03 260 / 0.4);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
