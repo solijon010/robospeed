@@ -63,7 +63,7 @@ function EvaluatePage() {
   ).length;
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="p-4 space-y-5 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
