@@ -1,8 +1,9 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
-import { Shuffle, RotateCcw, Trophy } from "lucide-react";
+import { Shuffle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WinnerModal } from "./WinnerModal";
 
 const COLORS = [
   "#e53935", "#1e88e5", "#43a047", "#fb8c00",
@@ -29,6 +30,7 @@ export function SpinWheel() {
   const [display, setDisplay] = useState<Participant[]>([]);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<Participant | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   // Load participants — sequential number = index + 1
   useEffect(() => {
@@ -147,7 +149,9 @@ export function SpinWheel() {
         const arc = (2 * Math.PI) / n;
         const norm = ((angleRef.current % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
         const idx = Math.floor(((2 * Math.PI - norm) % (2 * Math.PI)) / arc) % n;
-        setWinner(display[idx]);
+        const w = display[idx];
+        setWinner(w);
+        setShowModal(true);
       }
     };
     rafRef.current = requestAnimationFrame(animate);
@@ -160,8 +164,16 @@ export function SpinWheel() {
   }, [spin]);
 
   const handleShuffle = () => setDisplay((p) => shuffle(p));
-  const handleSort   = () => setDisplay([...all]);
-  const handleReset  = () => { setWinner(null); setDisplay(all); };
+  const handleSort    = () => setDisplay([...all]);
+  const handleReset   = () => { setWinner(null); setShowModal(false); setDisplay(all); };
+
+  const handleRemove = () => {
+    if (!winner) return;
+    const next = display.filter((p) => p.num !== winner.num);
+    setDisplay(next);
+    setShowModal(false);
+    setWinner(null);
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState(520);
@@ -188,14 +200,18 @@ export function SpinWheel() {
       className="flex w-full overflow-hidden"
       style={{ height: "100dvh", background: "linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)" }}
     >
+      {/* ── Winner modal ── */}
+      {showModal && winner && (
+        <WinnerModal
+          num={winner.num}
+          name={winner.name}
+          onRemove={handleRemove}
+          onDone={() => setShowModal(false)}
+        />
+      )}
+
       {/* ── Wheel ── */}
       <div ref={containerRef} className="flex-1 flex flex-col items-center justify-center gap-6 px-8">
-        {winner && (
-          <div className="flex items-center gap-3 bg-yellow-400 text-yellow-900 px-8 py-3 rounded-2xl font-extrabold text-2xl shadow-xl animate-bounce">
-            <Trophy className="w-7 h-7" />
-            №{winner.num} — {winner.name}
-          </div>
-        )}
 
         <div className="relative">
           <canvas
@@ -264,7 +280,7 @@ export function SpinWheel() {
         </div>
 
         <div className="px-4 py-3 border-t border-white/10 space-y-2">
-          {winner && (
+          {winner && !showModal && (
             <div className="bg-yellow-400/20 border border-yellow-400/40 rounded-xl px-3 py-2 text-center">
               <p className="text-yellow-300 text-xs font-medium">G'olib</p>
               <p className="text-yellow-200 font-bold">№{winner.num} — {winner.name}</p>
