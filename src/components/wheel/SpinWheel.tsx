@@ -121,10 +121,6 @@ export function SpinWheel() {
     ctx.shadowBlur = 0;
   }, []);
 
-  useEffect(() => {
-    drawWheel(angleRef.current, display);
-  }, [display, drawWheel]);
-
   const spin = useCallback(() => {
     if (spinning || display.length < 2) return;
     setSpinning(true);
@@ -167,7 +163,25 @@ export function SpinWheel() {
   const handleSort   = () => setDisplay([...all]);
   const handleReset  = () => { setWinner(null); setDisplay(all); };
 
-  const CANVAS = 520;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState(520);
+
+  useEffect(() => {
+    const update = () => {
+      if (!containerRef.current) return;
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      const size = Math.floor(Math.min(width - 80, height - 120));
+      setCanvasSize(Math.max(size, 300));
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // Redraw when canvas size changes
+  useEffect(() => {
+    drawWheel(angleRef.current, display);
+  }, [canvasSize, display, drawWheel]);
 
   return (
     <div
@@ -175,7 +189,7 @@ export function SpinWheel() {
       style={{ height: "100dvh", background: "linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)" }}
     >
       {/* ── Wheel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8">
+      <div ref={containerRef} className="flex-1 flex flex-col items-center justify-center gap-6 px-8">
         {winner && (
           <div className="flex items-center gap-3 bg-yellow-400 text-yellow-900 px-8 py-3 rounded-2xl font-extrabold text-2xl shadow-xl animate-bounce">
             <Trophy className="w-7 h-7" />
@@ -186,8 +200,8 @@ export function SpinWheel() {
         <div className="relative">
           <canvas
             ref={canvasRef}
-            width={CANVAS}
-            height={CANVAS}
+            width={canvasSize}
+            height={canvasSize}
             onClick={spin}
             className="cursor-pointer drop-shadow-2xl"
             style={{ borderRadius: "50%" }}
