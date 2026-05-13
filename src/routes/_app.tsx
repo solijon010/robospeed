@@ -13,11 +13,7 @@ function AppLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-30 px-4">
-            <SidebarTrigger />
-            <div className="text-sm text-muted-foreground">ROBO SPEED CHALLENGE — Boshqaruv paneli</div>
-          </header>
-          <main className="flex-1 p-6 md:p-8">
+<main className="flex-1 flex flex-col min-h-0 overflow-hidden p-4">
             <Outlet />
           </main>
         </div>
