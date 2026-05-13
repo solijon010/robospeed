@@ -9,11 +9,7 @@ export const Route = createFileRoute("/_app/register")({
 
 function RegisterPage() {
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold">Ishtirokchilarni ro'yxatga olish</h1>
-        <p className="text-muted-foreground mt-1">Yangi ishtirokchini qo'shing va ro'yxatni boshqaring.</p>
-      </div>
+    <div className="space-y-8">
       <ParticipantForm />
       <ParticipantsTable />
     </div>

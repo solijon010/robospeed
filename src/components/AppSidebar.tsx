@@ -25,7 +25,8 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
-  const isActive = (path: string) => (path === "/" ? currentPath === "/" : currentPath.startsWith(path));
+  const isActive = (path: string) =>
+    path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
   return (
     <Sidebar collapsible="icon">

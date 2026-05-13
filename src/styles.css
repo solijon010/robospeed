@@ -97,3 +97,63 @@
     letter-spacing: -0.02em;
   }
 }
+
+.checkmark-animation .checkmark-circle {
+  animation: checkmark-circle 0.45s ease-out forwards;
+}
+
+.checkmark-animation .checkmark-path {
+  animation: checkmark-path 0.45s ease-out 0.15s forwards;
+}
+
+@keyframes checkmark-circle {
+  from {
+    stroke-dashoffset: 251;
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkmark-path {
+  from {
+    stroke-dashoffset: 70;
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.78 0.18 220 / 0.35) transparent;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: oklch(0.78 0.18 220 / 0.6) oklch(0.20 0.03 260 / 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 99px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.78 0.18 220 / 0.35);
+  border-radius: 99px;
+  transition: background 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.78 0.18 220 / 0.7);
+}
