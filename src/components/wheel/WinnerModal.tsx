@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 interface Props {
   num: number;
   name: string;
-  onRemove: () => void;
   onDone: () => void;
 }
 
@@ -66,7 +65,7 @@ function Confetti() {
   );
 }
 
-export function WinnerModal({ num, name, onRemove, onDone }: Props) {
+export function WinnerModal({ num, name, onDone }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
@@ -85,17 +84,11 @@ export function WinnerModal({ num, name, onRemove, onDone }: Props) {
           <p className="text-slate-400 text-base mt-1">Tanlandi</p>
         </div>
 
-        {/* Buttons */}
-        <div className="relative z-10 flex border-t border-slate-100">
-          <button
-            onClick={onRemove}
-            className="flex-1 py-4 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-100"
-          >
-            OLIB TASHLASH
-          </button>
+        {/* Button */}
+        <div className="relative z-10 border-t border-slate-100">
           <button
             onClick={onDone}
-            className="flex-1 py-4 text-sm font-bold text-white transition-colors"
+            className="w-full py-4 text-base font-bold text-white transition-colors"
             style={{ background: "linear-gradient(135deg,#f59e0b,#f97316)" }}
           >
             TAYYOR

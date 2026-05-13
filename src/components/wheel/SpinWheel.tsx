@@ -205,8 +205,7 @@ export function SpinWheel() {
         <WinnerModal
           num={winner.num}
           name={winner.name}
-          onRemove={handleRemove}
-          onDone={() => setShowModal(false)}
+          onDone={handleRemove}
         />
       )}
 
