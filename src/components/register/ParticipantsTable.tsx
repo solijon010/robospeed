@@ -14,7 +14,7 @@ import { db } from "@/integrations/firebase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, ArrowRight } from "lucide-react";
+import { Trash2, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface Participant {
@@ -30,6 +30,8 @@ export function ParticipantsTable() {
   const navigate = useNavigate();
   const [list, setList] = useState<Participant[]>([]);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
 
   useEffect(() => {
     const q = query(collection(db, "participants"), orderBy("created_at"));
@@ -58,12 +60,23 @@ export function ParticipantsTable() {
     }
   };
 
+  const totalPages = Math.ceil(list.length / pageSize);
+  const paginatedList = list.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const startIndex = currentPage * pageSize;
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+  };
+
   return (
     <Card className="overflow-hidden">
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="font-semibold">Ro'yxatdan o'tganlar</h2>
-          <Badge variant="secondary" className="font-mono">{list.length}</Badge>
+          <Badge variant="secondary" className="font-mono">
+            {list.length}
+          </Badge>
         </div>
         <Button size="sm" onClick={() => navigate({ to: "/evaluate" })}>
           Baholashga o'tish
@@ -85,14 +98,14 @@ export function ParticipantsTable() {
             </tr>
           </thead>
           <tbody>
-            {list.length === 0 && (
+            {paginatedList.length === 0 && list.length === 0 && (
               <tr>
                 <td colSpan={7} className="p-12 text-center text-muted-foreground">
                   Hozircha ishtirokchilar yo'q
                 </td>
               </tr>
             )}
-            {list.map((p, i) => (
+            {paginatedList.map((p, i) => (
               <tr
                 key={p.id}
                 className={`border-t border-border hover:bg-secondary/30 transition-colors ${
@@ -107,16 +120,14 @@ export function ParticipantsTable() {
                       color: "var(--color-primary)",
                     }}
                   >
-                    {i + 1}
+                    {startIndex + i + 1}
                   </span>
                 </td>
                 <td className="p-3 font-medium">{p.full_name}</td>
                 <td className="p-3 text-muted-foreground font-mono text-xs">
                   {p.custom_number || "—"}
                 </td>
-                <td className="p-3 text-muted-foreground font-mono text-xs">
-                  {p.phone || "—"}
-                </td>
+                <td className="p-3 text-muted-foreground font-mono text-xs">{p.phone || "—"}</td>
                 <td className="p-3">{p.age}</td>
                 <td className="p-3">
                   <Badge variant="outline" className="text-xs font-medium">
@@ -138,6 +149,55 @@ export function ParticipantsTable() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="px-6 py-5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-secondary/5">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Ko'rsatish:
+          </span>
+          <select
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="px-3 py-2 text-sm font-medium border border-input rounded-lg bg-background text-foreground cursor-pointer hover:bg-secondary/60 hover:border-emerald-400/30 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+          >
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
+          <span>
+            {list.length === 0
+              ? "—"
+              : `${startIndex + 1}–${Math.min((currentPage + 1) * pageSize, list.length)}`}{" "}
+            / {list.length}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+            disabled={currentPage === 0}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-xs font-semibold px-4 py-2 rounded-lg bg-secondary/40 text-foreground border border-border/50">
+            {currentPage + 1} / {totalPages || 1}
+          </span>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+            disabled={currentPage >= totalPages - 1}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </Card>
   );
