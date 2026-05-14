@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { collection, doc, updateDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
 import { Card } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Save, Timer, Zap, ClipboardCheck, CheckCircle2 } from "lucide-react";
+import { Minus, Plus, Save, Timer, Zap, ClipboardCheck, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   PENALTY_PER_HIT,
@@ -23,7 +23,13 @@ import type { ParticipantWithEval } from "./types";
 
 interface Props {
   participant: ParticipantWithEval;
+  rows: ParticipantWithEval[];
   onSaved: () => void;
+  onSelect: (id: string) => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+  currentIndex?: number;
+  totalCount?: number;
 }
 
 interface EvalSnap {
@@ -64,8 +70,21 @@ function ScoreBar({ label, value, max }: { label: string; value: number; max: nu
   );
 }
 
-export function EvaluateForm({ participant, onSaved }: Props) {
+export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onNext, currentIndex, totalCount }: Props) {
   const e = participant.evaluation!;
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [dropdownOpen]);
 
   /* Pre-competition fields */
   const [tech, setTech] = useState(String(e.technical_score || ""));
@@ -149,38 +168,131 @@ export function EvaluateForm({ participant, onSaved }: Props) {
   };
 
   return (
-    <div className="space-y-5">
-      {/* ── Participant header + live total ── */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">{participant.full_name}</h2>
-          <p className="text-sm text-muted-foreground">
-            {participant.group_name}
-            {participant.custom_number && (
-              <span className="ml-2 font-mono">· № {participant.custom_number}</span>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-4 items-end">
-          {tNum > 0 && (
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Yakuniy vaqt</div>
-              <div className="text-3xl font-mono font-bold" style={{ color: "var(--color-accent)" }}>
-                {fmtTime(ft)}
+    <div className="space-y-4">
+      {/* ── Participant switcher header ── */}
+      <div className="flex items-center gap-3">
+        {/* Prev */}
+        <button
+          onClick={onPrev}
+          disabled={!onPrev}
+          className="w-10 h-10 rounded-xl flex items-center justify-center border border-border/60 bg-secondary/40 hover:bg-secondary/80 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        {/* Clickable participant card → dropdown */}
+        <div ref={dropdownRef} className="relative flex-1">
+          <button
+            onClick={() => setDropdownOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-4 px-5 py-3 rounded-xl border border-border/60 hover:border-primary/40 transition-all text-left"
+            style={{ background: "oklch(0.18 0.05 250)" }}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              {participant.custom_number && (
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-black shrink-0"
+                  style={{ background: "var(--color-primary)", color: "#000" }}
+                >
+                  {participant.custom_number}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold leading-tight truncate">{participant.full_name}</h2>
+                <p className="text-sm text-muted-foreground">{participant.group_name}</p>
               </div>
-              {penalty > 0 && (
-                <div className="text-xs text-destructive">+{penalty}s jarima ({hits} bosish)</div>
+              <ChevronDown
+                className={`w-4 h-4 text-muted-foreground/60 shrink-0 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+              />
+            </div>
+
+            {/* Live totals */}
+            <div className="flex gap-5 items-end shrink-0">
+              {tNum > 0 && (
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Vaqt</div>
+                  <div className="text-2xl font-mono font-bold" style={{ color: "var(--color-accent)" }}>
+                    {fmtTime(ft)}
+                  </div>
+                  {penalty > 0 && (
+                    <div className="text-xs text-destructive">+{penalty}s ({hits}×)</div>
+                  )}
+                </div>
+              )}
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Ball</div>
+                <div className="text-2xl font-mono font-bold" style={{ color: "var(--color-primary)" }}>
+                  {liveTotal.toFixed(1)}
+                </div>
+                <div className="text-xs text-muted-foreground">/ 100</div>
+              </div>
+            </div>
+          </button>
+
+          {/* Dropdown list */}
+          {dropdownOpen && (
+            <div
+              className="absolute top-full left-0 right-0 mt-1.5 rounded-xl border border-border/60 overflow-hidden z-50 shadow-2xl"
+              style={{ background: "oklch(0.16 0.05 255)" }}
+            >
+              <div className="p-1.5 max-h-72 overflow-y-auto custom-scrollbar space-y-0.5">
+                {rows.map((p, i) => {
+                  const ev = p.evaluation;
+                  const compDone = ev && ev.time_seconds > 0;
+                  const preCompDone = ev && (Number(ev.technical_score) > 0 || Number(ev.design_score) > 0);
+                  const isActive = p.id === participant.id;
+
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => { onSelect(p.id); setDropdownOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
+                        isActive ? "bg-primary/20 border border-primary/30" : "hover:bg-secondary/60"
+                      }`}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                        style={
+                          isActive
+                            ? { background: "var(--color-primary)", color: "#000" }
+                            : { background: "oklch(0.78 0.18 220 / 0.15)", color: "var(--color-primary)" }
+                        }
+                      >
+                        {p.custom_number || i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{p.full_name}</div>
+                        <div className="text-xs text-muted-foreground">{p.group_name}</div>
+                      </div>
+                      <div className="shrink-0">
+                        {compDone ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        ) : preCompDone ? (
+                          <ClipboardCheck className="w-4 h-4 text-amber-400" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border border-muted-foreground/20" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {totalCount !== undefined && currentIndex !== undefined && (
+                <div className="border-t border-border/40 px-4 py-2 text-xs text-muted-foreground">
+                  {currentIndex + 1} / {totalCount} ishtirokchi
+                </div>
               )}
             </div>
           )}
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Joriy ball</div>
-            <div className="text-3xl font-mono font-bold" style={{ color: "var(--color-primary)" }}>
-              {liveTotal.toFixed(1)}
-            </div>
-            <div className="text-xs text-muted-foreground">/ 100</div>
-          </div>
         </div>
+
+        {/* Next */}
+        <button
+          onClick={onNext}
+          disabled={!onNext}
+          className="w-10 h-10 rounded-xl flex items-center justify-center border border-border/60 bg-secondary/40 hover:bg-secondary/80 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
 
       {/* ── Live score bars ── */}
@@ -191,7 +303,10 @@ export function EvaluateForm({ participant, onSaved }: Props) {
         <ScoreBar label="Dizayn"        value={liveDesign}  max={MAX_DESIGN} />
       </div>
 
-      {/* ── Phase 1: Pre-competition nominations ── */}
+      {/* ── Phase cards side by side ── */}
+      <div className="grid lg:grid-cols-2 gap-4">
+
+      {/* Phase 1: Pre-competition nominations */}
       <Card className="p-6 border-amber-500/20" style={{ background: "oklch(0.16 0.04 60 / 0.4)" }}>
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
@@ -216,7 +331,7 @@ export function EvaluateForm({ participant, onSaved }: Props) {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5 mb-5">
+        <div className="grid gap-5 mb-5">
           {[
             {
               label: "Texnik bilim",
@@ -264,7 +379,7 @@ export function EvaluateForm({ participant, onSaved }: Props) {
         </div>
       </Card>
 
-      {/* ── Phase 2: Competition timing ── */}
+      {/* Phase 2: Competition timing */}
       <Card className="p-6 border-cyan-500/20" style={{ background: "oklch(0.16 0.05 220 / 0.4)" }}>
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
@@ -289,7 +404,7 @@ export function EvaluateForm({ participant, onSaved }: Props) {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-5">
+        <div className="grid gap-5 mb-5">
           {/* Time */}
           <div className="space-y-2">
             <Label className="flex items-center justify-between">
@@ -366,6 +481,8 @@ export function EvaluateForm({ participant, onSaved }: Props) {
           </Button>
         </div>
       </Card>
+
+      </div>{/* end phase grid */}
     </div>
   );
 }
