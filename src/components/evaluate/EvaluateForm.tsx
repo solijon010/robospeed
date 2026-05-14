@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Save, Timer, Zap, ClipboardCheck, CheckCircle2 } from "lucide-react";
+import { Minus, Plus, Save, Timer, Zap, ClipboardCheck, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   PENALTY_PER_HIT,
@@ -24,6 +24,10 @@ import type { ParticipantWithEval } from "./types";
 interface Props {
   participant: ParticipantWithEval;
   onSaved: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+  currentIndex?: number;
+  totalCount?: number;
 }
 
 interface EvalSnap {
@@ -64,7 +68,7 @@ function ScoreBar({ label, value, max }: { label: string; value: number; max: nu
   );
 }
 
-export function EvaluateForm({ participant, onSaved }: Props) {
+export function EvaluateForm({ participant, onSaved, onPrev, onNext, currentIndex, totalCount }: Props) {
   const e = participant.evaluation!;
 
   /* Pre-competition fields */
@@ -150,38 +154,76 @@ export function EvaluateForm({ participant, onSaved }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* ── Participant header + live total ── */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">{participant.full_name}</h2>
-          <p className="text-sm text-muted-foreground">
-            {participant.group_name}
+      {/* ── Participant switcher header ── */}
+      <div className="flex items-center gap-3">
+        {/* Prev */}
+        <button
+          onClick={onPrev}
+          disabled={!onPrev}
+          className="w-10 h-10 rounded-xl flex items-center justify-center border border-border/60 bg-secondary/40 hover:bg-secondary/80 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        {/* Participant info */}
+        <div
+          className="flex-1 flex items-center justify-between gap-4 px-5 py-3 rounded-xl border border-border/60"
+          style={{ background: "oklch(0.18 0.05 250)" }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
             {participant.custom_number && (
-              <span className="ml-2 font-mono">· № {participant.custom_number}</span>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-4 items-end">
-          {tNum > 0 && (
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Yakuniy vaqt</div>
-              <div className="text-3xl font-mono font-bold" style={{ color: "var(--color-accent)" }}>
-                {fmtTime(ft)}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-black shrink-0"
+                style={{ background: "var(--color-primary)", color: "#000" }}
+              >
+                {participant.custom_number}
               </div>
-              {penalty > 0 && (
-                <div className="text-xs text-destructive">+{penalty}s jarima ({hits} bosish)</div>
-              )}
+            )}
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold leading-tight truncate">{participant.full_name}</h2>
+              <p className="text-sm text-muted-foreground">{participant.group_name}</p>
             </div>
-          )}
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Joriy ball</div>
-            <div className="text-3xl font-mono font-bold" style={{ color: "var(--color-primary)" }}>
-              {liveTotal.toFixed(1)}
+          </div>
+
+          {/* Live totals */}
+          <div className="flex gap-5 items-end shrink-0">
+            {tNum > 0 && (
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Vaqt</div>
+                <div className="text-2xl font-mono font-bold" style={{ color: "var(--color-accent)" }}>
+                  {fmtTime(ft)}
+                </div>
+                {penalty > 0 && (
+                  <div className="text-xs text-destructive">+{penalty}s ({hits}×)</div>
+                )}
+              </div>
+            )}
+            <div className="text-right">
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Ball</div>
+              <div className="text-2xl font-mono font-bold" style={{ color: "var(--color-primary)" }}>
+                {liveTotal.toFixed(1)}
+              </div>
+              <div className="text-xs text-muted-foreground">/ 100</div>
             </div>
-            <div className="text-xs text-muted-foreground">/ 100</div>
           </div>
         </div>
+
+        {/* Next */}
+        <button
+          onClick={onNext}
+          disabled={!onNext}
+          className="w-10 h-10 rounded-xl flex items-center justify-center border border-border/60 bg-secondary/40 hover:bg-secondary/80 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
+
+      {/* Counter */}
+      {totalCount !== undefined && currentIndex !== undefined && (
+        <div className="text-center text-xs text-muted-foreground">
+          {currentIndex + 1} / {totalCount} ishtirokchi
+        </div>
+      )}
 
       {/* ── Live score bars ── */}
       <div className="grid grid-cols-4 gap-2">
