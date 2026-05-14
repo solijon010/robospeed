@@ -24,7 +24,6 @@ interface FireEval {
   red_line_hits: number;
   technical_score: number;
   design_score: number;
-  control_score: number;
 }
 
 function RatingPage() {

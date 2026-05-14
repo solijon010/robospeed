@@ -11,7 +11,6 @@ export interface EvalRow {
   red_line_hits: number;
   technical_score: number;
   design_score: number;
-  control_score: number;
 }
 
 export function finalTime(timeSeconds: number, hits: number) {
@@ -30,7 +29,7 @@ export function speedScore(thisFinal: number, bestFinal: number) {
 }
 
 export function totalScore(
-  e: Pick<EvalRow, "time_seconds" | "red_line_hits" | "technical_score" | "design_score" | "control_score">,
+  e: Pick<EvalRow, "time_seconds" | "red_line_hits" | "technical_score" | "design_score">,
   bestFinal: number,
 ) {
   const ft = finalTime(e.time_seconds, e.red_line_hits);
