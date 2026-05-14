@@ -154,7 +154,7 @@ export function ParticipantForm() {
   return (
     <>
       <Card className="overflow-hidden border border-border bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_40%),linear-gradient(135deg,rgba(22,163,74,0.12),rgba(15,23,42,0.9))] shadow-[0_30px_90px_-50px_rgba(34,197,94,0.6)]">
-        <div className="p-6 md:flex md:items-center md:justify-between gap-6">
+        <div className="px-8 py-6 md:flex md:items-center md:justify-between gap-6">
           <div className="space-y-2">
             <h2 className="text-3xl font-semibold tracking-tight">Ishtirokchi qo'shish</h2>
           </div>
