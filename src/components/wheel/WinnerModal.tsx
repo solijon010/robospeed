@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 interface Props {
-  num: number;
+  num: string;
   name: string;
   onDone: () => void;
 }
