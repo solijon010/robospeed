@@ -12,7 +12,6 @@ import {
   PENALTY_PER_HIT,
   MAX_TECHNICAL,
   MAX_DESIGN,
-  MAX_CONTROL,
   MAX_ACCURACY,
   MAX_SPEED,
   finalTime,
@@ -43,7 +42,6 @@ export function EvaluateForm({ participant, onSaved }: Props) {
   const [hits, setHits] = useState(e.red_line_hits || 0);
   const [tech, setTech] = useState(String(e.technical_score || ""));
   const [design, setDesign] = useState(String(e.design_score || ""));
-  const [control, setControl] = useState(String(e.control_score || ""));
   const [saving, setSaving] = useState(false);
   const [allEvals, setAllEvals] = useState<EvalSnap[]>([]);
 
@@ -64,7 +62,6 @@ export function EvaluateForm({ participant, onSaved }: Props) {
   const accuracy = accuracyScore(hits);
   const liveTech = clamp(parseFloat(tech) || 0, 0, MAX_TECHNICAL);
   const liveDesign = clamp(parseFloat(design) || 0, 0, MAX_DESIGN);
-  const liveControl = clamp(parseFloat(control) || 0, 0, MAX_CONTROL);
 
   const bestFinal = useMemo(() => {
     const times = allEvals.map((ev) => finalTime(ev.time_seconds, ev.red_line_hits));
@@ -73,14 +70,13 @@ export function EvaluateForm({ participant, onSaved }: Props) {
   }, [allEvals, ft]);
 
   const liveSpeed = tNum > 0 ? speedScore(ft, bestFinal) : 0;
-  const liveTotal = liveSpeed + accuracy + liveTech + liveDesign + liveControl;
+  const liveTotal = liveSpeed + accuracy + liveTech + liveDesign;
 
   const liveBars = [
     { label: "Tezlik", value: liveSpeed, max: MAX_SPEED },
     { label: "Aniqlik", value: accuracy, max: MAX_ACCURACY },
     { label: "Texnik", value: liveTech, max: MAX_TECHNICAL },
     { label: "Dizayn", value: liveDesign, max: MAX_DESIGN },
-    { label: "Boshqaruv", value: liveControl, max: MAX_CONTROL },
   ];
 
   const save = async () => {
@@ -91,7 +87,6 @@ export function EvaluateForm({ participant, onSaved }: Props) {
         red_line_hits: hits,
         technical_score: liveTech,
         design_score: liveDesign,
-        control_score: liveControl,
         updated_at: serverTimestamp(),
       });
       toast.success("Natija saqlandi");
@@ -137,7 +132,7 @@ export function EvaluateForm({ participant, onSaved }: Props) {
         </div>
 
         {/* Score breakdown bars */}
-        <div className="grid grid-cols-5 gap-2 mb-6">
+        <div className="grid grid-cols-4 gap-2 mb-6">
           {liveBars.map((s) => {
             const pct = s.max > 0 ? (s.value / s.max) * 100 : 0;
             const barColor =
@@ -229,7 +224,7 @@ export function EvaluateForm({ participant, onSaved }: Props) {
           Hakam tomonidan beriladigan balllar
           <Badge variant="secondary" className="text-xs font-normal">maks. 30 ball</Badge>
         </h3>
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-2 gap-5">
           {[
             {
               label: "Texnik bilim",
@@ -244,13 +239,6 @@ export function EvaluateForm({ participant, onSaved }: Props) {
               value: design,
               set: setDesign,
               desc: "Tashqi ko'rinish, korpus, originallik, LED bezatish va 3D-bosma elementlar.",
-            },
-            {
-              label: "Boshqaruv aniqligi",
-              max: MAX_CONTROL,
-              value: control,
-              set: setControl,
-              desc: "Yurish davomida silliq va aniq harakatlanish — keskin to'xtash va chayqalishsiz.",
             },
           ].map((f) => (
             <div key={f.label} className="space-y-2">

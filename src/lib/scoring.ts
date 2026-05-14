@@ -2,8 +2,7 @@ export const PENALTY_PER_HIT = 5;
 export const MAX_SPEED = 50;
 export const MAX_ACCURACY = 20;
 export const MAX_TECHNICAL = 15;
-export const MAX_DESIGN = 10;
-export const MAX_CONTROL = 5;
+export const MAX_DESIGN = 15;
 
 export interface EvalRow {
   id: string;
@@ -39,8 +38,7 @@ export function totalScore(
     speedScore(ft, bestFinal) +
     accuracyScore(e.red_line_hits) +
     Number(e.technical_score || 0) +
-    Number(e.design_score || 0) +
-    Number(e.control_score || 0)
+    Number(e.design_score || 0)
   );
 }
 
