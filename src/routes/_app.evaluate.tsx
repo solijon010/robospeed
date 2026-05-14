@@ -62,7 +62,7 @@ function EvaluatePage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="p-6 max-w-4xl mx-auto">
+        <div className="p-6">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
               <Users className="w-10 h-10 text-muted-foreground/30" />

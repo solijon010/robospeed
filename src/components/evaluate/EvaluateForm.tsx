@@ -168,7 +168,7 @@ export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onN
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* ── Participant switcher header ── */}
       <div className="flex items-center gap-3">
         {/* Prev */}
@@ -303,7 +303,10 @@ export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onN
         <ScoreBar label="Dizayn"        value={liveDesign}  max={MAX_DESIGN} />
       </div>
 
-      {/* ── Phase 1: Pre-competition nominations ── */}
+      {/* ── Phase cards side by side ── */}
+      <div className="grid lg:grid-cols-2 gap-4">
+
+      {/* Phase 1: Pre-competition nominations */}
       <Card className="p-6 border-amber-500/20" style={{ background: "oklch(0.16 0.04 60 / 0.4)" }}>
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
@@ -328,7 +331,7 @@ export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onN
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5 mb-5">
+        <div className="grid gap-5 mb-5">
           {[
             {
               label: "Texnik bilim",
@@ -376,7 +379,7 @@ export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onN
         </div>
       </Card>
 
-      {/* ── Phase 2: Competition timing ── */}
+      {/* Phase 2: Competition timing */}
       <Card className="p-6 border-cyan-500/20" style={{ background: "oklch(0.16 0.05 220 / 0.4)" }}>
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
@@ -401,7 +404,7 @@ export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onN
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-5">
+        <div className="grid gap-5 mb-5">
           {/* Time */}
           <div className="space-y-2">
             <Label className="flex items-center justify-between">
@@ -478,6 +481,8 @@ export function EvaluateForm({ participant, rows, onSaved, onSelect, onPrev, onN
           </Button>
         </div>
       </Card>
+
+      </div>{/* end phase grid */}
     </div>
   );
 }
