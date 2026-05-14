@@ -5,6 +5,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
 import { UserCheck, Plus, Trash2, Shield, Pencil } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +23,7 @@ interface Hakam {
   ism: string;
   familya: string;
   lavozim: string;
+  active?: boolean;
 }
 
 const AVATAR_COLORS = [
@@ -67,6 +69,7 @@ export function HakamlarPage() {
         ism: addIsm.trim(),
         familya: addFamilya.trim(),
         lavozim: addLavozim.trim(),
+        active: true,
         created_at: serverTimestamp(),
       });
       toast.success("Hakam qo'shildi");
@@ -102,6 +105,14 @@ export function HakamlarPage() {
       toast.error("Yangilashda xatolik");
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function handleToggle(id: string, currentActive: boolean) {
+    try {
+      await updateDoc(doc(db, "hakamlar", id), { active: !currentActive });
+    } catch {
+      toast.error("Yangilashda xatolik");
     }
   }
 
@@ -194,6 +205,24 @@ export function HakamlarPage() {
                     <Shield className="w-3 h-3 text-primary shrink-0" />
                     <span className="text-xs text-muted-foreground truncate">{hakam.lavozim}</span>
                   </div>
+                </div>
+
+                {/* Active toggle */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/40 mt-1">
+                  <span className="text-xs text-muted-foreground">
+                    {hakam.active !== false ? (
+                      <span className="text-emerald-400 font-medium flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Aktiv
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/50">O'chirilgan</span>
+                    )}
+                  </span>
+                  <Switch
+                    checked={hakam.active !== false}
+                    onCheckedChange={() => handleToggle(hakam.id, hakam.active !== false)}
+                  />
                 </div>
               </div>
             );
