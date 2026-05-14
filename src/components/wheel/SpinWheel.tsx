@@ -11,7 +11,7 @@ const COLORS = [
   "#c0ca33", "#6d4c41",
 ];
 
-interface Participant { num: number; name: string }
+interface Participant { num: number; customNum: string; name: string }
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -36,10 +36,14 @@ export function SpinWheel() {
   useEffect(() => {
     const q = query(collection(db, "participants"), orderBy("created_at"));
     return onSnapshot(q, (snap) => {
-      const list = snap.docs.map((d, i) => ({
-        num: i + 1,
-        name: (d.data().full_name as string) || "?",
-      }));
+      const list = snap.docs.map((d, i) => {
+        const cn = d.data().custom_number;
+        return {
+          num: i + 1,
+          customNum: cn ? String(cn) : String(i + 1),
+          name: (d.data().full_name as string) || "?",
+        };
+      });
       setAll(list);
       setDisplay(list);
     });
@@ -105,7 +109,7 @@ export function SpinWheel() {
       ctx.shadowBlur = 6;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(`${items[i].num}`, r * 0.62, 0);
+      ctx.fillText(items[i].customNum, r * 0.62, 0);
 
       ctx.restore();
     }
@@ -203,7 +207,7 @@ export function SpinWheel() {
       {/* ── Winner modal ── */}
       {showModal && winner && (
         <WinnerModal
-          num={winner.num}
+          num={winner.customNum}
           name={winner.name}
           onDone={handleRemove}
         />
@@ -270,7 +274,7 @@ export function SpinWheel() {
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-extrabold text-sm shrink-0"
                   style={{ background: COLORS[i % COLORS.length] }}
                 >
-                  {p.num}
+                  {p.customNum}
                 </div>
                 <span className="text-white/80 text-sm truncate">{p.name}</span>
               </div>
