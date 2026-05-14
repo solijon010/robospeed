@@ -41,6 +41,7 @@ interface EditForm {
   full_name: string;
   phone: string;
   age: string;
+  date_of_birth: string;
   group_name: string;
   custom_number: string;
 }
@@ -77,7 +78,7 @@ export function ParticipantsTable() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [editTarget, setEditTarget] = useState<Participant | null>(null);
-  const [editForm, setEditForm] = useState<EditForm>({ full_name: "", phone: "", age: "", group_name: "", custom_number: "" });
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: "", phone: "", age: "", date_of_birth: "", group_name: "", custom_number: "" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -110,6 +111,7 @@ export function ParticipantsTable() {
       full_name: p.full_name,
       phone: p.phone || "",
       age: String(p.age),
+      date_of_birth: p.date_of_birth || "",
       group_name: p.group_name,
       custom_number: p.custom_number || "",
     });
@@ -121,7 +123,13 @@ export function ParticipantsTable() {
       toast.error("Familiya ism va guruh majburiy");
       return;
     }
-    const age = Number(editForm.age);
+    let age = Number(editForm.age);
+    if (editForm.date_of_birth) {
+      const birth = new Date(editForm.date_of_birth);
+      const now = new Date();
+      age = now.getFullYear() - birth.getFullYear();
+      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
+    }
     if (!age || age <= 0 || age > 120) {
       toast.error("Yoshni to'g'ri kiriting");
       return;
@@ -132,6 +140,7 @@ export function ParticipantsTable() {
         full_name: editForm.full_name.trim(),
         phone: editForm.phone.trim() || "",
         age,
+        date_of_birth: editForm.date_of_birth || null,
         group_name: editForm.group_name.trim(),
         custom_number: editForm.custom_number.trim() || null,
       });
@@ -325,12 +334,11 @@ export function ParticipantsTable() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Yosh</Label>
+              <Label>Tug'ilgan sana</Label>
               <Input
-                type="number"
-                value={editForm.age}
-                onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
-                placeholder="18"
+                type="date"
+                value={editForm.date_of_birth}
+                onChange={(e) => setEditForm({ ...editForm, date_of_birth: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">

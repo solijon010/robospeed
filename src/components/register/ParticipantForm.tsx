@@ -123,6 +123,7 @@ export function ParticipantForm() {
         full_name: form.full_name.trim(),
         phone: form.phone.trim() || "",
         age,
+        date_of_birth: form.date_of_birth,
         group_name: form.group_name.trim(),
         custom_number: form.custom_number.trim() || null,
         created_at: serverTimestamp(),
