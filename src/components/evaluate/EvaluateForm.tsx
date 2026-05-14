@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import {
   collection, doc, updateDoc, serverTimestamp,
-  onSnapshot, orderBy, query, where,
+  onSnapshot, orderBy, query,
 } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
 import { Card } from "@/components/ui/card";
@@ -90,16 +90,16 @@ export function EvaluateForm({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [dropdownOpen]);
 
-  /* Active hakamlar */
+  /* Active hakamlar — all fetched, filtered client-side to avoid composite index */
   const [hakamlar, setHakamlar] = useState<Hakam[]>([]);
   useEffect(() => {
-    const q = query(
-      collection(db, "hakamlar"),
-      where("active", "==", true),
-      orderBy("created_at"),
-    );
+    const q = query(collection(db, "hakamlar"), orderBy("created_at"));
     return onSnapshot(q, (snap) => {
-      setHakamlar(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Hakam));
+      setHakamlar(
+        snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }) as Hakam & { active?: boolean })
+          .filter((h) => h.active !== false),
+      );
     });
   }, []);
 
