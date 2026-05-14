@@ -32,6 +32,7 @@ interface Participant {
   full_name: string;
   phone: string;
   age: number;
+  date_of_birth?: string | null;
   group_name: string;
   custom_number?: string | null;
 }
@@ -175,6 +176,7 @@ export function ParticipantsTable() {
                 <th className="text-left p-3">Raqam</th>
                 <th className="text-left p-3">Telefon</th>
                 <th className="text-left p-3">Yosh</th>
+                <th className="text-left p-3">Tug'ilgan sana</th>
                 <th className="text-left p-3">Guruh</th>
                 <th className="p-3 w-20" />
               </tr>
@@ -182,7 +184,7 @@ export function ParticipantsTable() {
             <tbody>
               {paginatedList.length === 0 && list.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-12 text-center text-muted-foreground">
                     Hozircha ishtirokchilar yo'q
                   </td>
                 </tr>
@@ -213,6 +215,9 @@ export function ParticipantsTable() {
                     {p.phone || "—"}
                   </td>
                   <td className="p-3">{p.age}</td>
+                  <td className="p-3 font-mono text-xs text-muted-foreground">
+                    {p.date_of_birth || "—"}
+                  </td>
                   <td className="p-3">
                     <Badge variant="outline" className="text-xs font-medium">
                       {p.group_name}
