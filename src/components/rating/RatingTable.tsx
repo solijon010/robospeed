@@ -5,6 +5,8 @@ export interface RatingRow {
   id: string;
   full_name: string;
   group_name: string;
+  custom_number?: string | null;
+  seqNum?: number;
   e: {
     time_seconds: number;
     red_line_hits: number;
@@ -23,8 +25,7 @@ const COLS = [
   { key: "technical", label: "Texnik bilim", max: 15 },
   { key: "accuracy",  label: "Aniqlik",      max: 20 },
   { key: "speed",     label: "Tezlik",        max: 50 },
-  { key: "design",    label: "Dizayn",        max: 10 },
-  { key: "control",   label: "Boshqaruv",    max: 5  },
+  { key: "design",    label: "Dizayn",        max: 15 },
 ] as const;
 
 function scoreColor(value: number, max: number) {
@@ -37,100 +38,150 @@ function scoreColor(value: number, max: number) {
 function ScoreCell({ value, max, hasResult }: { value: number; max: number; hasResult: boolean }) {
   if (!hasResult)
     return (
-      <td className="px-3 py-2.5 text-center border-r border-border/60 text-muted-foreground/30 font-mono text-sm">
+      <td className="px-3 py-0 text-center border-r border-border/40 text-muted-foreground/25 font-mono text-sm">
         —
       </td>
     );
   const display = value % 1 === 0 ? value : value.toFixed(1);
   return (
-    <td className={`px-3 py-2.5 text-center border-r border-border/60 font-mono text-sm font-semibold ${scoreColor(value, max)}`}>
+    <td className={`px-3 py-0 text-center border-r border-border/40 font-mono text-base font-bold ${scoreColor(value, max)}`}>
       {display}
     </td>
   );
 }
 
-export function RatingTable({ ranked }: { ranked: RatingRow[] }) {
-  const EMPTY_ROWS = Math.max(0, 5 - ranked.length);
+function rowBg(index: number, hasResult: boolean, isTop3: boolean) {
+  if (isTop3) {
+    if (index === 0) return "bg-amber-500/8 hover:bg-amber-500/12";
+    if (index === 1) return "bg-slate-400/8 hover:bg-slate-400/12";
+    if (index === 2) return "bg-orange-600/8 hover:bg-orange-600/12";
+  }
+  return index % 2 !== 0 ? "bg-white/3 hover:bg-white/5" : "hover:bg-white/3";
+}
 
+export function RatingTable({ ranked }: { ranked: RatingRow[] }) {
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border"
-      style={{ boxShadow: "var(--shadow-glow)" }}
+      className="flex flex-col h-full rounded-2xl border border-border/60 overflow-hidden"
+      style={{ boxShadow: "0 0 60px -20px oklch(0.78 0.18 220 / 0.25)" }}
     >
-      {/* Table title header */}
+      {/* Table title */}
       <div
-        className="px-6 py-5 border-b border-border text-center"
-        style={{ background: "linear-gradient(135deg, oklch(0.20 0.05 250) 0%, oklch(0.18 0.04 240) 100%)" }}
+        className="px-8 py-4 text-center shrink-0 border-b border-border/40"
+        style={{ background: "linear-gradient(135deg, oklch(0.18 0.06 250) 0%, oklch(0.15 0.04 240) 100%)" }}
       >
         <h2
-          className="text-lg font-bold tracking-[0.2em] uppercase"
+          className="text-2xl font-black tracking-[0.25em] uppercase"
           style={{ color: "var(--color-primary)" }}
         >
           ROBO SPEED CHALLENGE
         </h2>
-        <p className="text-xs text-muted-foreground tracking-widest mt-1 uppercase">
+        <p className="text-xs text-muted-foreground/70 tracking-[0.2em] mt-1 uppercase">
           Baholash va Natijalar Jadvali
         </p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
+      {/* Table */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <thead className="sticky top-0 z-10">
             <tr
-              className="border-b border-border"
-              style={{ background: "oklch(0.20 0.04 250)" }}
+              style={{ background: "oklch(0.18 0.05 250)" }}
+              className="border-b-2 border-border/60"
             >
-              <th className="px-3 py-3 text-center w-10 border-r border-border/60 text-muted-foreground text-xs font-semibold uppercase">
+              <th className="px-4 py-3 text-center w-12 border-r border-border/40 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                 №
               </th>
-              <th className="px-4 py-3 text-left border-r border-border/60 text-muted-foreground text-xs font-semibold uppercase">
+              <th className="px-5 py-3 text-left border-r border-border/40 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                 Ism Familiyasi
               </th>
-              <th className="px-3 py-3 text-center border-r border-border/60 text-muted-foreground text-xs font-semibold uppercase">
-                Guruhi
+              <th className="px-4 py-3 text-center border-r border-border/40 text-muted-foreground text-xs font-bold uppercase tracking-widest">
+                Guruh
+              </th>
+              <th className="px-3 py-3 text-center border-r border-border/40 text-muted-foreground text-xs font-bold uppercase tracking-widest">
+                Vaqt
               </th>
               {COLS.map((c) => (
                 <th
                   key={c.key}
-                  className="px-3 py-3 text-center border-r border-border/60 text-xs font-semibold uppercase"
+                  className="px-3 py-3 text-center border-r border-border/40 text-xs font-bold uppercase tracking-widest"
                   style={{ color: "var(--color-muted-foreground)" }}
                 >
                   <span className="block">{c.label}</span>
-                  <span className="block text-muted-foreground/50 font-normal normal-case">/ {c.max}</span>
+                  <span className="block text-muted-foreground/40 font-normal normal-case text-[11px]">/ {c.max}</span>
                 </th>
               ))}
               <th
-                className="px-3 py-3 text-center border-r border-border/60 text-xs font-bold uppercase"
+                className="px-4 py-3 text-center border-r border-border/40 text-xs font-bold uppercase tracking-widest"
                 style={{ color: "var(--color-primary)" }}
               >
                 <span className="block">JAMI</span>
-                <span className="block text-muted-foreground/50 font-normal normal-case">/ 100</span>
+                <span className="block text-muted-foreground/40 font-normal normal-case text-[11px]">/ 100</span>
               </th>
-              <th className="px-3 py-3 text-center w-16 text-muted-foreground text-xs font-semibold uppercase">
+              <th className="px-4 py-3 text-center w-16 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                 O'rin
               </th>
             </tr>
           </thead>
 
           <tbody>
+            {ranked.length === 0 && (
+              <tr>
+                <td colSpan={10} className="p-16 text-center text-muted-foreground text-sm">
+                  Hozircha ma'lumot yo'q
+                </td>
+              </tr>
+            )}
+
             {ranked.map((r, i) => {
               const e = r.e;
               const isTop3 = r.hasResult && i < 3;
               return (
                 <tr
                   key={r.id}
-                  className={`border-b border-border/60 transition-colors hover:bg-primary/5 ${
-                    i % 2 !== 0 ? "bg-secondary/15" : ""
-                  } ${isTop3 ? "ring-inset" : ""}`}
+                  className={`border-b border-border/30 transition-colors ${rowBg(i, r.hasResult, isTop3)}`}
+                  style={{ height: "52px" }}
                 >
-                  <td className="px-3 py-2.5 text-center border-r border-border/60 text-muted-foreground/50 font-mono text-xs">
-                    {i + 1}
+                  {/* № */}
+                  <td className="px-4 py-0 text-center border-r border-border/40">
+                    <span className="text-muted-foreground/50 font-mono text-sm">
+                      {r.custom_number || r.seqNum || i + 1}
+                    </span>
                   </td>
-                  <td className="px-4 py-2.5 border-r border-border/60">
-                    <span className="font-medium">{r.full_name}</span>
+
+                  {/* Ism */}
+                  <td className="px-5 py-0 border-r border-border/40">
+                    <div className="flex items-center gap-3">
+                      {isTop3 && (
+                        <span
+                          className="w-1.5 h-8 rounded-full shrink-0"
+                          style={{
+                            background: i === 0
+                              ? "var(--color-gold)"
+                              : i === 1
+                              ? "var(--color-silver)"
+                              : "var(--color-bronze)",
+                          }}
+                        />
+                      )}
+                      <span className="font-semibold text-base truncate">{r.full_name}</span>
+                    </div>
                   </td>
-                  <td className="px-3 py-2.5 text-center border-r border-border/60 text-xs text-muted-foreground">
-                    {r.group_name}
+
+                  {/* Guruh */}
+                  <td className="px-4 py-0 text-center border-r border-border/40">
+                    <span className="text-xs font-medium text-muted-foreground bg-secondary/60 px-2 py-1 rounded-md">
+                      {r.group_name}
+                    </span>
+                  </td>
+
+                  {/* Vaqt */}
+                  <td className="px-3 py-0 text-center border-r border-border/40 font-mono text-sm">
+                    {r.hasResult ? (
+                      <span className="text-accent font-semibold">{fmtTime(r.ft)}</span>
+                    ) : (
+                      <span className="text-muted-foreground/30">—</span>
+                    )}
                   </td>
 
                   {/* Texnik bilim */}
@@ -140,21 +191,24 @@ export function RatingTable({ ranked }: { ranked: RatingRow[] }) {
                   {/* Tezlik */}
                   <ScoreCell value={r.speed} max={50} hasResult={r.hasResult} />
                   {/* Dizayn */}
-                  <ScoreCell value={Number(e?.design_score ?? 0)} max={10} hasResult={r.hasResult} />
-                  {/* Boshqaruv */}
-                  <ScoreCell value={Number(e?.control_score ?? 0)} max={5} hasResult={r.hasResult} />
+                  <ScoreCell value={Number(e?.design_score ?? 0)} max={15} hasResult={r.hasResult} />
 
                   {/* JAMI */}
-                  <td
-                    className={`px-3 py-2.5 text-center border-r border-border/60 font-bold text-base ${
-                      r.hasResult ? "text-primary" : "text-muted-foreground/30"
-                    }`}
-                  >
-                    {r.hasResult ? r.total.toFixed(1) : "—"}
+                  <td className="px-4 py-0 text-center border-r border-border/40">
+                    {r.hasResult ? (
+                      <span
+                        className="text-xl font-black"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        {r.total.toFixed(1)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/25 font-mono">—</span>
+                    )}
                   </td>
 
                   {/* O'rin */}
-                  <td className="px-3 py-2.5">
+                  <td className="px-4 py-0">
                     <div className="flex items-center justify-center">
                       <RankBadge rank={r.hasResult ? i + 1 : null} />
                     </div>
@@ -162,91 +216,20 @@ export function RatingTable({ ranked }: { ranked: RatingRow[] }) {
                 </tr>
               );
             })}
-
-            {/* Empty placeholder rows when list is short */}
-            {Array.from({ length: EMPTY_ROWS }).map((_, i) => (
-              <tr
-                key={`empty-${i}`}
-                className={`border-b border-border/60 ${
-                  (ranked.length + i) % 2 !== 0 ? "bg-secondary/15" : ""
-                }`}
-              >
-                <td className="px-3 py-2.5 text-center border-r border-border/60 text-muted-foreground/25 font-mono text-xs">
-                  {ranked.length + i + 1}
-                </td>
-                <td className="px-4 py-2.5 border-r border-border/60 h-10" />
-                <td className="px-3 py-2.5 border-r border-border/60" />
-                {COLS.map((c) => (
-                  <td key={c.key} className="px-3 py-2.5 border-r border-border/60" />
-                ))}
-                <td className="px-3 py-2.5 border-r border-border/60" />
-                <td className="px-3 py-2.5" />
-              </tr>
-            ))}
-
-            {ranked.length === 0 && EMPTY_ROWS === 0 && (
-              <tr>
-                <td colSpan={10} className="p-10 text-center text-muted-foreground">
-                  Hozircha ma'lumot yo'q
-                </td>
-              </tr>
-            )}
           </tbody>
-
-          {/* Footer with time info */}
-          {ranked.filter((r) => r.hasResult).length > 0 && (
-            <tfoot>
-              <tr className="border-t border-border bg-secondary/20">
-                <td colSpan={3} className="px-4 py-2 text-xs text-muted-foreground">
-                  Yakuniy vaqtlar
-                </td>
-                {COLS.map((c) => (
-                  <td key={c.key} className="px-3 py-2 border-r border-border/60" />
-                ))}
-                <td colSpan={2} className="px-4 py-2 text-xs text-muted-foreground text-right">
-                  Natijalar real vaqtda yangilanadi
-                </td>
-              </tr>
-            </tfoot>
-          )}
         </table>
       </div>
 
-      {/* Time breakdown for evaluated participants */}
-      {ranked.some((r) => r.hasResult) && (
-        <div className="border-t border-border px-6 py-3 bg-secondary/10 overflow-x-auto">
-          <table className="w-full text-xs text-muted-foreground">
-            <thead>
-              <tr>
-                <th className="text-left py-1 w-10">№</th>
-                <th className="text-left py-1">Ism</th>
-                <th className="text-right py-1">Toza vaqt</th>
-                <th className="text-right py-1">Jarima</th>
-                <th className="text-right py-1 font-semibold text-foreground">Yakuniy vaqt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ranked
-                .filter((r) => r.hasResult)
-                .map((r, i) => (
-                  <tr key={r.id} className="border-t border-border/30">
-                    <td className="py-1">{i + 1}</td>
-                    <td className="py-1">{r.full_name}</td>
-                    <td className="py-1 text-right font-mono">
-                      {r.e ? fmtTime(r.e.time_seconds) : "—"}
-                    </td>
-                    <td className="py-1 text-right font-mono text-destructive">
-                      {r.e && r.e.red_line_hits > 0 ? `+${r.e.red_line_hits * 5}s` : "—"}
-                    </td>
-                    <td className="py-1 text-right font-mono font-semibold text-accent">
-                      {fmtTime(r.ft)}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+      {/* Footer */}
+      <div className="shrink-0 border-t border-border/40 px-6 py-2 flex items-center justify-between bg-secondary/10">
+        <span className="text-xs text-muted-foreground/50">
+          Yakuniy vaqt = Vaqt + (Bosishlar × 5s) &nbsp;·&nbsp; Tezlik = (eng_yaxshi / yakuniy) × 50 &nbsp;·&nbsp; Aniqlik = 20 − Bosishlar × 5 &nbsp;·&nbsp; Dizayn maks. 15
+        </span>
+        <div className="flex items-center gap-1.5 text-xs text-emerald-400/60">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse" />
+          Real vaqtda yangilanadi
         </div>
-      )}
+      </div>
     </div>
   );
 }

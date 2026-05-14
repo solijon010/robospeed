@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
 import { finalTime, accuracyScore, speedScore } from "@/lib/scoring";
-import { FastestCard } from "@/components/rating/FastestCard";
 import { RatingTable, type RatingRow } from "@/components/rating/RatingTable";
 
 export const Route = createFileRoute("/_app/rating")({
@@ -15,6 +14,7 @@ interface FireParticipant {
   id: string;
   full_name: string;
   group_name: string;
+  custom_number?: string | null;
 }
 
 interface FireEval {
@@ -61,22 +61,19 @@ function RatingPage() {
         )
       : 0;
 
-    return participants.map((p) => {
+    return participants.map((p, i) => {
       const ev = evaluations.find((e) => e.participant_id === p.id) ?? null;
       if (!ev || !ev.time_seconds) {
-        return { ...p, e: null, ft: 0, speed: 0, accuracy: 0, total: 0, hasResult: false };
+        return { ...p, seqNum: i + 1, e: null, ft: 0, speed: 0, accuracy: 0, total: 0, hasResult: false };
       }
       const ft = finalTime(ev.time_seconds, ev.red_line_hits);
       const speed = speedScore(ft, bestFinal);
       const accuracy = accuracyScore(ev.red_line_hits);
       const total =
-        speed +
-        accuracy +
-        Number(ev.technical_score) +
-        Number(ev.design_score) +
-        Number(ev.control_score);
+        speed + accuracy + Number(ev.technical_score) + Number(ev.design_score);
       return {
         ...p,
+        seqNum: i + 1,
         e: {
           time_seconds: ev.time_seconds,
           red_line_hits: ev.red_line_hits,
@@ -102,35 +99,35 @@ function RatingPage() {
     [rows],
   );
 
-  const fastest = useMemo(() => {
-    const finished = ranked.filter((r) => r.hasResult);
-    if (!finished.length) return null;
-    return finished.reduce(
-      (best, r) => (!best || r.ft < best.ft ? { name: r.full_name, ft: r.ft } : best),
-      null as null | { name: string; ft: number },
-    );
-  }, [ranked]);
+  const evaluatedCount = ranked.filter((r) => r.hasResult).length;
 
   return (
-    <div className="p-4 space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Onlayn musobaqa reytingi</h1>
-          <p className="text-muted-foreground mt-1">
-            Jami: {participants.length} ishtirokchi · Yakunlangan:{" "}
-            {ranked.filter((r) => r.hasResult).length}
-            <span className="ml-2 text-xs text-emerald-400">● Jonli yangilanish</span>
-          </p>
+    <div
+      className="flex flex-col"
+      style={{ height: "100dvh", background: "linear-gradient(160deg,#0a0f1e 0%,#0d1a2e 50%,#0a0f1e 100%)" }}
+    >
+      {/* Compact header */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border/40 shrink-0">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Onlayn musobaqa reytingi</h1>
+            <p className="text-xs text-muted-foreground">
+              Jami: <span className="text-foreground font-medium">{participants.length}</span> ishtirokchi
+              &nbsp;·&nbsp;
+              Yakunlangan: <span className="text-emerald-400 font-medium">{evaluatedCount}</span>
+            </p>
+          </div>
         </div>
-        {fastest && <FastestCard name={fastest.name} ft={fastest.ft} />}
+        <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Jonli yangilanish
+        </div>
       </div>
 
-      <RatingTable ranked={ranked} />
-
-      <p className="text-xs text-muted-foreground">
-        Hisoblash: Yakuniy vaqt = Vaqt + (Bosishlar × 5s). Tezlik = (eng_yaxshi / yakuniy) × 50.
-        Aniqlik = 20 − Bosishlar × 5.
-      </p>
+      {/* Table fills remaining height */}
+      <div className="flex-1 overflow-hidden px-4 py-4">
+        <RatingTable ranked={ranked} />
+      </div>
     </div>
   );
 }
