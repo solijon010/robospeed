@@ -79,7 +79,9 @@ function EvaluatePage() {
             <EvaluateForm
               key={selected.id}
               participant={selected}
+              rows={rows}
               onSaved={() => {}}
+              onSelect={setSelectedId}
               currentIndex={currentIndex}
               totalCount={rows.length}
               onPrev={currentIndex > 0 ? () => goTo(currentIndex - 1) : undefined}
