@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppRegisterRouteImport } from './routes/_app.register'
 import { Route as AppRatingRouteImport } from './routes/_app.rating'
+import { Route as AppHakamlarRouteImport } from './routes/_app.hakamlar'
 import { Route as AppEvaluateRouteImport } from './routes/_app.evaluate'
 
 const AppRoute = AppRouteImport.update({
@@ -34,6 +35,11 @@ const AppRatingRoute = AppRatingRouteImport.update({
   path: '/rating',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHakamlarRoute = AppHakamlarRouteImport.update({
+  id: '/hakamlar',
+  path: '/hakamlar',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEvaluateRoute = AppEvaluateRouteImport.update({
   id: '/evaluate',
   path: '/evaluate',
@@ -43,11 +49,13 @@ const AppEvaluateRoute = AppEvaluateRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/evaluate': typeof AppEvaluateRoute
+  '/hakamlar': typeof AppHakamlarRoute
   '/rating': typeof AppRatingRoute
   '/register': typeof AppRegisterRoute
 }
 export interface FileRoutesByTo {
   '/evaluate': typeof AppEvaluateRoute
+  '/hakamlar': typeof AppHakamlarRoute
   '/rating': typeof AppRatingRoute
   '/register': typeof AppRegisterRoute
   '/': typeof AppIndexRoute
@@ -56,19 +64,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_app/evaluate': typeof AppEvaluateRoute
+  '/_app/hakamlar': typeof AppHakamlarRoute
   '/_app/rating': typeof AppRatingRoute
   '/_app/register': typeof AppRegisterRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/evaluate' | '/rating' | '/register'
+  fullPaths: '/' | '/evaluate' | '/hakamlar' | '/rating' | '/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/evaluate' | '/rating' | '/register' | '/'
+  to: '/evaluate' | '/hakamlar' | '/rating' | '/register' | '/'
   id:
     | '__root__'
     | '/_app'
     | '/_app/evaluate'
+    | '/_app/hakamlar'
     | '/_app/rating'
     | '/_app/register'
     | '/_app/'
@@ -108,6 +118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRatingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/hakamlar': {
+      id: '/_app/hakamlar'
+      path: '/hakamlar'
+      fullPath: '/hakamlar'
+      preLoaderRoute: typeof AppHakamlarRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/evaluate': {
       id: '/_app/evaluate'
       path: '/evaluate'
@@ -120,6 +137,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppEvaluateRoute: typeof AppEvaluateRoute
+  AppHakamlarRoute: typeof AppHakamlarRoute
   AppRatingRoute: typeof AppRatingRoute
   AppRegisterRoute: typeof AppRegisterRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -127,6 +145,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppEvaluateRoute: AppEvaluateRoute,
+  AppHakamlarRoute: AppHakamlarRoute,
   AppRatingRoute: AppRatingRoute,
   AppRegisterRoute: AppRegisterRoute,
   AppIndexRoute: AppIndexRoute,
