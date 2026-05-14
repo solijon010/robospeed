@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import {
+  collection, addDoc, deleteDoc, doc,
+  onSnapshot, orderBy, query, serverTimestamp, updateDoc,
+} from "firebase/firestore";
 import { db } from "@/integrations/firebase/client";
-import { UserCheck, Plus, Trash2, Shield } from "lucide-react";
+import { UserCheck, Plus, Trash2, Shield, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,11 +35,21 @@ const AVATAR_COLORS = [
 
 export function HakamlarPage() {
   const [hakamlar, setHakamlar] = useState<Hakam[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [ism, setIsm] = useState("");
-  const [familya, setFamilya] = useState("");
-  const [lavozim, setLavozim] = useState("");
+
+  // Add form
+  const [addOpen, setAddOpen] = useState(false);
+  const [addIsm, setAddIsm] = useState("");
+  const [addFamilya, setAddFamilya] = useState("");
+  const [addLavozim, setAddLavozim] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Edit form
+  const [editTarget, setEditTarget] = useState<Hakam | null>(null);
+  const [editIsm, setEditIsm] = useState("");
+  const [editFamilya, setEditFamilya] = useState("");
+  const [editLavozim, setEditLavozim] = useState("");
+  const [updating, setUpdating] = useState(false);
+
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,25 +59,49 @@ export function HakamlarPage() {
     });
   }, []);
 
-  const resetForm = () => { setIsm(""); setFamilya(""); setLavozim(""); };
-
   async function handleAdd() {
-    if (!ism.trim() || !familya.trim() || !lavozim.trim()) return;
+    if (!addIsm.trim() || !addFamilya.trim() || !addLavozim.trim()) return;
     setSaving(true);
     try {
       await addDoc(collection(db, "hakamlar"), {
-        ism: ism.trim(),
-        familya: familya.trim(),
-        lavozim: lavozim.trim(),
+        ism: addIsm.trim(),
+        familya: addFamilya.trim(),
+        lavozim: addLavozim.trim(),
         created_at: serverTimestamp(),
       });
       toast.success("Hakam qo'shildi");
-      resetForm();
-      setModalOpen(false);
+      setAddIsm(""); setAddFamilya(""); setAddLavozim("");
+      setAddOpen(false);
     } catch {
       toast.error("Xatolik yuz berdi");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function openEdit(h: Hakam) {
+    setEditTarget(h);
+    setEditIsm(h.ism);
+    setEditFamilya(h.familya);
+    setEditLavozim(h.lavozim);
+  }
+
+  async function handleUpdate() {
+    if (!editTarget) return;
+    if (!editIsm.trim() || !editFamilya.trim() || !editLavozim.trim()) return;
+    setUpdating(true);
+    try {
+      await updateDoc(doc(db, "hakamlar", editTarget.id), {
+        ism: editIsm.trim(),
+        familya: editFamilya.trim(),
+        lavozim: editLavozim.trim(),
+      });
+      toast.success("Ma'lumotlar yangilandi");
+      setEditTarget(null);
+    } catch {
+      toast.error("Yangilashda xatolik");
+    } finally {
+      setUpdating(false);
     }
   }
 
@@ -89,14 +126,12 @@ export function HakamlarPage() {
           <p className="text-muted-foreground mt-1 text-sm">
             Musobaqa hakamlarini boshqaring
             {hakamlar.length > 0 && (
-              <span className="ml-2 inline-flex items-center gap-1 text-primary font-semibold">
-                · {hakamlar.length} ta
-              </span>
+              <span className="ml-2 text-primary font-semibold">· {hakamlar.length} ta</span>
             )}
           </p>
         </div>
         <Button
-          onClick={() => setModalOpen(true)}
+          onClick={() => setAddOpen(true)}
           className="gap-2 rounded-full px-5"
           style={{ background: "var(--gradient-hero)" }}
         >
@@ -111,13 +146,7 @@ export function HakamlarPage() {
           <div className="w-16 h-16 rounded-full bg-secondary/40 flex items-center justify-center">
             <UserCheck className="w-8 h-8 text-muted-foreground/50" />
           </div>
-          <div className="text-center">
-            <p className="font-medium text-muted-foreground">Hozircha hakamlar yo'q</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">Yangi hakam qo'shish uchun yuqoridagi tugmani bosing</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => setModalOpen(true)} className="gap-2 mt-2">
-            <Plus className="w-3.5 h-3.5" /> Hakam qo'shish
-          </Button>
+          <p className="font-medium text-muted-foreground">Hozircha hakamlar mavjud emas</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -129,14 +158,27 @@ export function HakamlarPage() {
                 key={hakam.id}
                 className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
               >
-                {/* Delete button */}
-                <button
-                  className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/10 hover:bg-destructive/20"
-                  onClick={() => handleDelete(hakam.id)}
-                  disabled={deleting === hakam.id}
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                </button>
+                {/* Action buttons — visible on hover */}
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    className="w-7 h-7 rounded-full flex items-center justify-center bg-primary/10 hover:bg-primary/20"
+                    onClick={() => openEdit(hakam)}
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-primary" />
+                  </button>
+                  <button
+                    className="w-7 h-7 rounded-full flex items-center justify-center bg-destructive/10 hover:bg-destructive/20"
+                    onClick={() => handleDelete(hakam.id)}
+                    disabled={deleting === hakam.id}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </button>
+                </div>
+
+                {/* Index badge */}
+                <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-secondary/60 flex items-center justify-center text-xs font-bold text-muted-foreground">
+                  {index + 1}
+                </div>
 
                 {/* Avatar */}
                 <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${gradient} flex items-center justify-center text-white text-xl font-black shadow-lg`}>
@@ -153,11 +195,6 @@ export function HakamlarPage() {
                     <span className="text-xs text-muted-foreground truncate">{hakam.lavozim}</span>
                   </div>
                 </div>
-
-                {/* Index badge */}
-                <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-secondary/60 flex items-center justify-center text-xs font-bold text-muted-foreground">
-                  {index + 1}
-                </div>
               </div>
             );
           })}
@@ -165,7 +202,10 @@ export function HakamlarPage() {
       )}
 
       {/* Add Dialog */}
-      <Dialog open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) resetForm(); }}>
+      <Dialog open={addOpen} onOpenChange={(open) => {
+        setAddOpen(open);
+        if (!open) { setAddIsm(""); setAddFamilya(""); setAddLavozim(""); }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Yangi hakam qo'shish</DialogTitle>
@@ -173,46 +213,68 @@ export function HakamlarPage() {
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="familya">Familya</Label>
-                <Input
-                  id="familya"
-                  placeholder="Karimov"
-                  value={familya}
-                  onChange={(e) => setFamilya(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                />
+                <Label>Familya</Label>
+                <Input placeholder="Karimov" value={addFamilya}
+                  onChange={(e) => setAddFamilya(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="ism">Ism</Label>
-                <Input
-                  id="ism"
-                  placeholder="Alisher"
-                  value={ism}
-                  onChange={(e) => setIsm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                />
+                <Label>Ism</Label>
+                <Input placeholder="Alisher" value={addIsm}
+                  onChange={(e) => setAddIsm(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lavozim">Lavozim</Label>
-              <Input
-                id="lavozim"
-                placeholder="Bosh hakam"
-                value={lavozim}
-                onChange={(e) => setLavozim(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              />
+              <Label>Lavozim</Label>
+              <Input placeholder="Bosh hakam" value={addLavozim}
+                onChange={(e) => setAddLavozim(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setModalOpen(false); resetForm(); }}>
-              Bekor qilish
-            </Button>
-            <Button
-              onClick={handleAdd}
-              disabled={saving || !ism.trim() || !familya.trim() || !lavozim.trim()}
-            >
+            <Button variant="outline" onClick={() => setAddOpen(false)}>Bekor qilish</Button>
+            <Button onClick={handleAdd}
+              disabled={saving || !addIsm.trim() || !addFamilya.trim() || !addLavozim.trim()}>
               {saving ? "Saqlanmoqda..." : "Qo'shish"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Hakamni tahrirlash</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Familya</Label>
+                <Input placeholder="Karimov" value={editFamilya}
+                  onChange={(e) => setEditFamilya(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleUpdate()} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ism</Label>
+                <Input placeholder="Alisher" value={editIsm}
+                  onChange={(e) => setEditIsm(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleUpdate()} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Lavozim</Label>
+              <Input placeholder="Bosh hakam" value={editLavozim}
+                onChange={(e) => setEditLavozim(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleUpdate()} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTarget(null)}>Bekor qilish</Button>
+            <Button onClick={handleUpdate}
+              disabled={updating || !editIsm.trim() || !editFamilya.trim() || !editLavozim.trim()}>
+              {updating ? "Saqlanmoqda..." : "Saqlash"}
             </Button>
           </DialogFooter>
         </DialogContent>
