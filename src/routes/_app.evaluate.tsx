@@ -168,7 +168,7 @@ function EvaluatePage() {
 
               {/* Participant list */}
               <div
-                className="overflow-y-auto"
+                className="overflow-y-auto custom-scrollbar"
                 style={{ maxHeight: "calc(100vh - 220px)" }}
               >
                 {rows.length === 0 ? (
