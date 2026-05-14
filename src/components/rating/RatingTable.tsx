@@ -22,9 +22,9 @@ export interface RatingRow {
 }
 
 const COLS = [
-  { key: "technical", label: "Texnik bilim", max: 15 },
-  { key: "accuracy",  label: "Aniqlik",      max: 20 },
   { key: "speed",     label: "Tezlik",        max: 50 },
+  { key: "accuracy",  label: "Aniqlik",       max: 20 },
+  { key: "technical", label: "Texnik bilim",  max: 15 },
   { key: "design",    label: "Dizayn",        max: 15 },
 ] as const;
 
@@ -184,12 +184,12 @@ export function RatingTable({ ranked }: { ranked: RatingRow[] }) {
                     )}
                   </td>
 
-                  {/* Texnik bilim */}
-                  <ScoreCell value={Number(e?.technical_score ?? 0)} max={15} hasResult={r.hasResult} />
-                  {/* Aniqlik */}
-                  <ScoreCell value={r.accuracy} max={20} hasResult={r.hasResult} />
                   {/* Tezlik */}
                   <ScoreCell value={r.speed} max={50} hasResult={r.hasResult} />
+                  {/* Aniqlik */}
+                  <ScoreCell value={r.accuracy} max={20} hasResult={r.hasResult} />
+                  {/* Texnik bilim */}
+                  <ScoreCell value={Number(e?.technical_score ?? 0)} max={15} hasResult={r.hasResult} />
                   {/* Dizayn */}
                   <ScoreCell value={Number(e?.design_score ?? 0)} max={15} hasResult={r.hasResult} />
 
