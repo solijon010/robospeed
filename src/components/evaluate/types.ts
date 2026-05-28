@@ -5,7 +5,7 @@ export interface Evaluation {
   red_line_hits: number;
   technical_score: number;
   design_score: number;
-  control_score: number;
+  hakam_scores?: Record<string, { technical_score: number; design_score: number }>;
 }
 
 export interface ParticipantWithEval {
